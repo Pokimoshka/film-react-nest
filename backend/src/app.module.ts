@@ -1,8 +1,6 @@
 import { Module } from '@nestjs/common';
-import { ServeStaticModule } from '@nestjs/serve-static';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
-import * as path from 'node:path';
 
 import { configProvider } from './app.config.provider';
 import { FilmsModule } from './films/films.module';
@@ -22,16 +20,6 @@ import { OrderModule } from './order/order.module';
           'mongodb://localhost:27017/prac',
         ),
       }),
-    }),
-    ServeStaticModule.forRoot({
-        rootPath: path.join(__dirname, '..', 'public'),
-        serveRoot: '/content/afisha',
-        serveStaticOptions: {
-            index: false,
-            fallthrough: true,     // если файла нет — отдать управление дальше (→ 404)
-            redirect: false,
-            etag: true,
-        },
     }),
     FilmsModule,
     OrderModule,
