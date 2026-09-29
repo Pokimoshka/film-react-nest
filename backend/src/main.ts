@@ -21,9 +21,10 @@ async function bootstrap() {
 
   // 2. Ручная раздача статики — надёжнее, чем ServeStaticModule,
   //    потому что мы явно управляем порядком middleware.
-  app.useStaticAssets(path.join(__dirname, '..', 'public'), {
+  const staticPath = path.join(__dirname, '..', 'public', 'content', 'afisha');
+  app.useStaticAssets(staticPath, {
     prefix: '/content/afisha/',
-    fallthrough: false,   // отдать 404, если файла нет (а не молча идти дальше)
+    fallthrough: true,
     index: false,
   });
 
