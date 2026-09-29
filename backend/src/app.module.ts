@@ -24,11 +24,14 @@ import { OrderModule } from './order/order.module';
       }),
     }),
     ServeStaticModule.forRoot({
-      rootPath: path.join(__dirname, '..', 'public'),
-      serveRoot: '/content/afisha',
-      serveStaticOptions: {
-        index: false,
-      },
+        rootPath: path.join(__dirname, '..', 'public'),
+        serveRoot: '/content/afisha',
+        serveStaticOptions: {
+            index: false,
+            fallthrough: true,     // если файла нет — отдать управление дальше (→ 404)
+            redirect: false,
+            etag: true,
+        },
     }),
     FilmsModule,
     OrderModule,
