@@ -18,11 +18,14 @@ async function bootstrap() {
     next();
   });
 
-  app.useStaticAssets(path.join(__dirname, '..', 'public'), {
-    prefix: '/content/afisha/',
-    fallthrough: true,
-    index: false,
-  });
+  app.useStaticAssets(
+    path.join(__dirname, '..', 'public', 'content', 'afisha'),
+    {
+      prefix: '/content/afisha/',
+      fallthrough: true,
+      index: false,
+    },
+  );
 
   const configService = app.get(ConfigService);
 

@@ -46,12 +46,22 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
   private extractMessage(body: unknown, fallback: string): string {
     if (typeof body === 'string') return body;
+
     if (body && typeof body === 'object') {
       const obj = body as Record<string, unknown>;
-      if (typeof obj.error === 'string') return obj.error;
-      if (typeof obj.message === 'string') return obj.message;
-      if (Array.isArray(obj.message)) return obj.message.join('; ');
+
+      if (typeof obj.message === 'string' && obj.message.length > 0) {
+        return obj.message;
+      }
+      if (Array.isArray(obj.message) && obj.message.length > 0) {
+        return obj.message.join('; ');
+      }
+
+      if (typeof obj.error === 'string' && obj.error.length > 0) {
+        return obj.error;
+      }
     }
+
     return fallback;
   }
 }
