@@ -1,17 +1,16 @@
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { ConfigService } from '@nestjs/config';
 import { Request, Response, NextFunction } from 'express';
 import * as path from 'node:path';
-import 'dotenv/config';
 
 import { AppModule } from './app.module';
-import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  // 1. Нормализация URL: `/content//bg2s.jpg` → `/content/bg2s.jpg`.
-  //    Делаем это ДО того, как запрос дойдёт до express.static.
+  // Нормализация повторных слешей в URL: /content//bg1s.jpg → /content/bg1s.jpg.
+  // Нужна, чтобы serve-static корректно разрешал путь, когда клиент шлёт «//».
   app.use((req: Request, _res: Response, next: NextFunction) => {
     if (typeof req.url === 'string' && req.url.includes('//')) {
       req.url = req.url.replace(/\/{2,}/g, '/');
@@ -19,20 +18,18 @@ async function bootstrap() {
     next();
   });
 
-  // 2. Ручная раздача статики — надёжнее, чем ServeStaticModule,
-  //    потому что мы явно управляем порядком middleware.
-  const staticPath = path.join(__dirname, '..', 'public', 'content', 'afisha');
-  app.useStaticAssets(staticPath, {
+  app.useStaticAssets(path.join(__dirname, '..', 'public'), {
     prefix: '/content/afisha/',
     fallthrough: true,
     index: false,
   });
 
+  const configService = app.get(ConfigService);
+
   app.setGlobalPrefix('api/afisha');
   app.enableCors();
-  app.useGlobalFilters(new HttpExceptionFilter());
 
-  const port = Number(process.env.PORT) || 3000;
+  const port = configService.get<number>('PORT', 3000);
   await app.listen(port);
 }
 

@@ -19,17 +19,56 @@ export class FilmsRepository {
   }
 
   /**
-   * Атомарно обновляет список занятых мест для конкретного сеанса.
+   * Атомарно добавляет места в taken конкретного сеанса, только если ни одно
+   * из этих мест ещё не занято.
+   *
+   * Возвращает true, если места были записаны; false — если хотя бы одно
+   * место уже занято (в том числе параллельным запросом).
    */
-  async updateTaken(
+  async addTaken(
     filmId: string,
     sessionId: string,
-    taken: string[],
+    places: string[],
+  ): Promise<boolean> {
+    if (places.length === 0) return true;
+
+    const result = await this.filmModel
+      .updateOne(
+        {
+          id: filmId,
+          schedule: {
+            $elemMatch: {
+              id: sessionId,
+              taken: { $nin: places },
+            },
+          },
+        },
+        {
+          $push: {
+            'schedule.$.taken': { $each: places },
+          },
+        },
+      )
+      .exec();
+
+    return result.modifiedCount > 0;
+  }
+
+  /**
+   * Компенсирующая операция: убирает места из taken.
+   * Используется для отката, если запись одной из групп заказа упала.
+   */
+  async removeTaken(
+    filmId: string,
+    sessionId: string,
+    places: string[],
   ): Promise<void> {
+    if (places.length === 0) return;
+
     await this.filmModel
       .updateOne(
         { id: filmId, 'schedule.id': sessionId },
-        { $set: { 'schedule.$.taken': taken } },
+        { $pull: { 'schedule.$.taken': { $in: places } } },
       )
       .exec();
   }
