@@ -5,6 +5,7 @@ import {
   IsEmail,
   IsInt,
   IsNotEmpty,
+  IsOptional,
   IsString,
   Min,
   ValidateNested,
@@ -27,16 +28,19 @@ export class TicketDto {
   @Min(1)
   seat: number;
 
-  // Опциональные поля, которые может прислать клиент.
+  @IsOptional()
   @IsString()
   daytime?: string;
 
+  @IsOptional()
   @IsString()
   day?: string;
 
+  @IsOptional()
   @IsString()
   time?: string;
 
+  @IsOptional()
   @IsInt()
   @Min(0)
   price?: number;
