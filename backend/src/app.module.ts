@@ -26,10 +26,19 @@ import { OrderModule } from './order/order.module';
           );
         }
         return {
-          type: 'postgres',
-          url: configService.get<string>('DATABASE_URL'),
-          username: configService.get<string>('DATABASE_USERNAME'),
-          password: configService.get<string>('DATABASE_PASSWORD'),
+          type: 'postgres' as const,
+          url: configService.get<string>(
+            'DATABASE_URL',
+            'postgres://localhost:5432/exampledb',
+          ),
+          username: configService.get<string>(
+            'DATABASE_USERNAME',
+            'exampleuser',
+          ),
+          password: configService.get<string>(
+            'DATABASE_PASSWORD',
+            'examplepass',
+          ),
           entities: [Film, Schedule],
           synchronize: false,
           autoLoadEntities: true,
