@@ -42,6 +42,8 @@ import { OrderModule } from './order/order.module';
           entities: [Film, Schedule],
           synchronize: false,
           autoLoadEntities: true,
+          retryAttempts: 1,
+          retryDelay: 1000,
         };
       },
     }),
