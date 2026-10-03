@@ -4191,7 +4191,7 @@ pg-types@2.2.0:
     postgres-date "~1.0.4"
     postgres-interval "^1.1.0"
 
-pg@^8.12.0, pg@^8.5.1, pg@>=8.0:
+pg@^8.23.1, pg@^8.5.1, pg@>=8.0:
   version "8.23.1"
   resolved "https://registry.npmjs.org/pg/-/pg-8.23.1.tgz"
   integrity sha512-aL96AHANtWjPLDOLqnhx+ngp9+UK7ETEU8VJrDCGvsSSi/mGLcWYsS6Herg7lmaBJe4uwrfqsa7gTEFaSizDoQ==
@@ -5109,7 +5109,7 @@ typedarray@^0.0.6:
   resolved "https://registry.npmjs.org/typedarray/-/typedarray-0.0.6.tgz"
   integrity sha512-/aCDEGatGvZ2BIk+HmLf4ifCJFwvKFNb9/JeZPMulfgFracn9QFcAf5GO8B/mweUjSoblS5In0cWhqpfs/5PQA==
 
-typeorm@^0.3.0, typeorm@^0.3.20:
+typeorm@^0.3.0, typeorm@^0.3.31:
   version "0.3.31"
   resolved "https://registry.npmjs.org/typeorm/-/typeorm-0.3.31.tgz"
   integrity sha512-6u9EFtdLBgHjnPm78NStVeM+I/1MolTzKykDDcydzKUkh6E++YS6XViU/fePJbvDvEGU4Xq34KOM/CLeer9I2A==
