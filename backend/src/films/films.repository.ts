@@ -4,10 +4,10 @@ import { DataSource, Repository } from 'typeorm';
 
 import { Film } from './entities/film.entity';
 import { Schedule } from './entities/schedule.entity';
-import { FilmsRepository as IFilmsRepository } from './films.repository.interface';
+import { FilmsRepository } from './films.repository.interface';
 
 @Injectable()
-export class FilmsRepository implements IFilmsRepository {
+export class TypeOrmFilmsRepository implements FilmsRepository {
   constructor(
     @InjectRepository(Film)
     private readonly filmRepository: Repository<Film>,
