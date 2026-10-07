@@ -5,12 +5,17 @@ import { Request, Response, NextFunction } from 'express';
 import * as path from 'node:path';
 
 import { AppModule } from './app.module';
+import { createLogger } from './logger/logger.factory';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    bufferLogs: true,
+  });
+
+  const configService = app.get(ConfigService);
+  app.useLogger(createLogger(configService.get<string>('LOG_FORMAT')));
 
   // Нормализация повторных слешей в URL: /content//bg1s.jpg → /content/bg1s.jpg.
-  // Нужна, чтобы serve-static корректно разрешал путь, когда клиент шлёт «//».
   app.use((req: Request, _res: Response, next: NextFunction) => {
     if (typeof req.url === 'string' && req.url.includes('//')) {
       req.url = req.url.replace(/\/{2,}/g, '/');
@@ -26,8 +31,6 @@ async function bootstrap() {
       index: false,
     },
   );
-
-  const configService = app.get(ConfigService);
 
   app.setGlobalPrefix('api/afisha');
   app.enableCors();
