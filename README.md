@@ -7,46 +7,54 @@
 
 - `backend/` — Nest.js + TypeORM + PostgreSQL
 - `backend/test/` — SQL-дампы для наполнения БД
-- `src/` — фронтенд на React + Vite
-- `docker-compose.yml` — конфигурация PostgreSQL для локального запуска
+- `frontend/` — React + Vite
+- `nginx/` — конфигурация reverse proxy и раздачи SPA
+- `docker-compose.yml` — локальный запуск приложения и PostgreSQL
 
-## Установка
+## Запуск через Docker Compose
 
-### PostgreSQL
+Скопируйте пример переменных окружения и запустите сервисы:
 
-Поднимите СУБД в Docker:
+```sh
+cp .env.example .env
+docker compose up -d --build
+```
 
-    docker-compose up -d
+Приложение будет доступно на `http://localhost`, pgAdmin — на `http://localhost:8080`. Данные для входа в pgAdmin задаются переменными `PGADMIN_EMAIL` и `PGADMIN_PASSWORD` в `.env`.
 
-Загрузите схему и тестовые данные:
+После запуска заполните базу SQL-файлами из `backend/test`:
 
-    docker exec -i postgres_container psql -U exampleuser -d exampledb < backend/test/prac.init.sql
-    docker exec -i postgres_container psql -U exampleuser -d exampledb < backend/test/prac.films.sql
-    docker exec -i postgres_container psql -U exampleuser -d exampledb < backend/test/prac.shedules.sql
+```sh
+docker compose exec -T database psql -U exampleuser -d exampledb < backend/test/prac.init.sql
+docker compose exec -T database psql -U exampleuser -d exampledb < backend/test/prac.films.sql
+docker compose exec -T database psql -U exampleuser -d exampledb < backend/test/prac.shedules.sql
+```
 
-### Бэкенд
+Пользователя, пароль и имя базы при необходимости измените в `.env`. Формат логов бэкенда задаётся `LOG_FORMAT`: `dev`, `json` или `tskv`.
 
-    cd backend
-    npm ci
-    cp .env.example .env
+## Локальная разработка
 
-В `.env` укажите параметры подключения к PostgreSQL:
+Для запуска бэкенда и фронтенда отдельно установите зависимости в соответствующих каталогах и используйте команды:
 
-- `DATABASE_DRIVER` — тип драйвера СУБД, в нашем случае `postgres`
-- `DATABASE_URL` — адрес PostgreSQL, например `postgres://localhost:5432/exampledb`
-- `DATABASE_USERNAME` — логин пользователя БД
-- `DATABASE_PASSWORD` — пароль пользователя БД
+```sh
+cd backend
+npm ci
+npm run start:dev
+```
 
-Запустите бэкенд:
+```sh
+cd frontend
+npm ci
+npm run dev
+```
 
-    npm run start:debug
+## Деплой
 
-Для проверки отправьте тестовый запрос с помощью Postman или `curl`:
+Приложение задеплоено на удалённом сервере и доступно по ссылке:
 
-    curl http://localhost:3000/api/afisha/films
+- 🌐 [https://backpm17yandex.ru](https://backpm17yandex.ru)
+- 🗄️ pgAdmin: https://backpm17yandex.ru:8080 (доступ только через SSH-туннель)
 
-### Фронтенд
+Сборка и публикация Docker-образов в GitHub Container Registry (GHCR) автоматизированы через GitHub Actions workflow (`.github/workflows/docker.yml`). При каждом пуше в ветку `main` собираются и пушатся образы `backend`, `frontend` и `nginx`.
 
-    cp .env.example .env
-    npm ci
-    npm run dev
+На сервере приложение запускается через `docker compose` с файлом `docker-compose.prod.yml`, который тянет опубликованные образы из GHCR.
