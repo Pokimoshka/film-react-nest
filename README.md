@@ -3,6 +3,11 @@
 Онлайн-сервис бронирования билетов в кинотеатр. Фронтенд на React (Vite),
 бэкенд на Nest.js, данные хранятся в PostgreSQL через TypeORM.
 
+> 🚀 **Задеплоенное приложение:** [https://backpm17yandex.ru](https://backpm17yandex.ru)
+>
+> API доступно на поддомене: [https://api.backpm17yandex.ru](https://api.backpm17yandex.ru)
+
+
 ## Структура
 
 - `backend/` — Nest.js + TypeORM + PostgreSQL
@@ -58,3 +63,18 @@ npm run dev
 Сборка и публикация Docker-образов в GitHub Container Registry (GHCR) автоматизированы через GitHub Actions workflow (`.github/workflows/docker.yml`). При каждом пуше в ветку `main` собираются и пушатся образы `backend`, `frontend` и `nginx`.
 
 На сервере приложение запускается через `docker compose` с файлом `docker-compose.prod.yml`, который тянет опубликованные образы из GHCR.
+
+### Обновление фронтенда при повторном деплое
+
+Собранные файлы фронтенда хранятся в именованном томе `frontend_dist`. При выходе новой версии образа перед перезапуском обязательно выполните `docker compose pull`, чтобы Docker подтянул свежий образ, а затем `docker compose up -d` — контейнер пересоздастся, entrypoint скопирует актуальный `dist` в том и nginx начнёт отдавать новую версию:
+
+```sh
+docker compose pull
+docker compose up -d
+```
+
+При желании можно принудительно пересоздать контейнеры:
+
+```sh
+docker compose up -d --force-recreate
+```
