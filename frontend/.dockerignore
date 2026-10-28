@@ -1,0 +1,12 @@
+node_modules
+dist
+coverage
+.storybook
+.template
+bin
+*.log
+.env
+.env.*
+!.env.example
+README.md
+package-lock.json.bak

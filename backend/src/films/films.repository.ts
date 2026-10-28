@@ -1,21 +1,32 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { Film, FilmDocument } from './films.schema';
+import { InjectRepository } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
+
+import { Film } from './entities/film.entity';
+import { Schedule } from './entities/schedule.entity';
+import { FilmsRepository } from './films.repository.interface';
 
 @Injectable()
-export class FilmsRepository {
+export class TypeOrmFilmsRepository implements FilmsRepository {
   constructor(
-    @InjectModel(Film.name)
-    private readonly filmModel: Model<FilmDocument>,
+    @InjectRepository(Film)
+    private readonly filmRepository: Repository<Film>,
+    private readonly dataSource: DataSource,
   ) {}
 
   async findAll(): Promise<Film[]> {
-    return this.filmModel.find().lean<Film[]>().exec();
+    return this.filmRepository.find({
+      relations: { schedule: true },
+      order: { schedule: { daytime: 'ASC' } },
+    });
   }
 
   async findById(id: string): Promise<Film | null> {
-    return this.filmModel.findOne({ id }).lean<Film | null>().exec();
+    return this.filmRepository.findOne({
+      where: { id },
+      relations: { schedule: true },
+      order: { schedule: { daytime: 'ASC' } },
+    });
   }
 
   /**
@@ -32,31 +43,27 @@ export class FilmsRepository {
   ): Promise<boolean> {
     if (places.length === 0) return true;
 
-    const result = await this.filmModel
-      .updateOne(
-        {
-          id: filmId,
-          schedule: {
-            $elemMatch: {
-              id: sessionId,
-              taken: { $nin: places },
-            },
-          },
-        },
-        {
-          $push: {
-            'schedule.$.taken': { $each: places },
-          },
-        },
-      )
-      .exec();
+    return this.dataSource.transaction(async (manager) => {
+      const schedule = await manager.findOne(Schedule, {
+        where: { id: sessionId, filmId },
+        lock: { mode: 'pessimistic_write' },
+      });
 
-    return result.modifiedCount > 0;
+      if (!schedule) return false;
+
+      const takenSet = new Set(schedule.taken);
+      for (const place of places) {
+        if (takenSet.has(place)) return false;
+      }
+
+      schedule.taken = [...schedule.taken, ...places];
+      await manager.save(schedule);
+      return true;
+    });
   }
 
   /**
    * Компенсирующая операция: убирает места из taken.
-   * Используется для отката, если запись одной из групп заказа упала.
    */
   async removeTaken(
     filmId: string,
@@ -65,11 +72,17 @@ export class FilmsRepository {
   ): Promise<void> {
     if (places.length === 0) return;
 
-    await this.filmModel
-      .updateOne(
-        { id: filmId, 'schedule.id': sessionId },
-        { $pull: { 'schedule.$.taken': { $in: places } } },
-      )
-      .exec();
+    await this.dataSource.transaction(async (manager) => {
+      const schedule = await manager.findOne(Schedule, {
+        where: { id: sessionId, filmId },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (!schedule) return;
+
+      const drop = new Set(places);
+      schedule.taken = schedule.taken.filter((p) => !drop.has(p));
+      await manager.save(schedule);
+    });
   }
 }
